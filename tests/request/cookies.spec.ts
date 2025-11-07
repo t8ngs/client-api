@@ -1,0 +1,72 @@
+/*
+ * @t8ngs/client-api
+ *
+ * (c) T8ngs
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+import cookie from 'cookie'
+import { test } from '@t8ngs/runner'
+
+import { ApiRequest } from '../../src/request.js'
+import { httpServer } from '../../tests_helpers/index.js'
+
+test.group('Request | cookies', (group) => {
+  group.each.setup(async () => {
+    await httpServer.create()
+    return () => httpServer.close()
+  })
+
+  test('send cookie header', async ({ assert }) => {
+    httpServer.onRequest((req, res) => {
+      res.statusCode = 200
+      res.setHeader('content-type', 'application/json')
+      res.end(JSON.stringify(cookie.parse(req.headers['cookie']!)))
+    })
+
+    const request = new ApiRequest({
+      baseUrl: httpServer.baseUrl,
+      method: 'GET',
+      endpoint: '/',
+    }).dump()
+    const response = await request.cookie('name', 'jefte').cookie('pass', 'secret')
+
+    assert.equal(response.status(), 200)
+    assert.deepEqual(response.body(), {
+      name: 'jefte',
+      pass: 'secret',
+    })
+  })
+
+  test('prepare cookies using the serializer', async ({ assert }) => {
+    httpServer.onRequest((req, res) => {
+      res.statusCode = 200
+      res.setHeader('content-type', 'application/json')
+      res.end(JSON.stringify(cookie.parse(req.headers['cookie']!)))
+    })
+
+    const request = new ApiRequest({
+      baseUrl: httpServer.baseUrl,
+      method: 'GET',
+      endpoint: '/',
+      serializers: {
+        cookie: {
+          process() {},
+          prepare(_, value) {
+            return Buffer.from(value).toString('base64')
+          },
+        },
+      },
+    }).dump()
+
+    const response = await request.cookie('name', 'jefte').cookie('pass', 'secret')
+
+    assert.equal(response.status(), 200)
+    assert.deepEqual(response.body(), {
+      name: Buffer.from('jefte').toString('base64'),
+      pass: Buffer.from('secret').toString('base64'),
+    })
+  })
+})
