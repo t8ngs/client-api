@@ -47,7 +47,7 @@
     "@t8ngs/fs": "^1.0.0",
     "@t8ngs/openapi": "^1.0.2",
     "@t8ngs/runner": "^1.0.1",
-    "@types/node": "^22.15.12",
+    "@types/node": "^24.10.0",
     "@types/qs": "^6.9.18",
     "@types/set-cookie-parser": "^2.4.10",
     "c8": "^10.1.3",
